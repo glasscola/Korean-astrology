@@ -12,7 +12,7 @@ AI·외부 API 호출 없이 작동하는 한국어 사주 풀이 웹사이트�
 
 `main` 브랜치에 푸시하면 `.github/workflows/deploy.yml`에서 계산·게시 검증을 실행하고 `dist/`를 GitHub Pages로 배포합니다. 새 저장소에서는 Settings → Pages → Build and deployment → Source를 GitHub Actions로 설정합니다.
 
-검증 명령: `node test-engine.cjs` 및 `node test-public.cjs`.
+검증 명령: `node test-engine.cjs`, `node test-public.cjs`, `node test-regions.cjs`.
 
 ## 실행
 
@@ -23,7 +23,7 @@ AI·외부 API 호출 없이 작동하는 한국어 사주 풀이 웹사이트�
 
 ## 기능
 
-- 이름·별명, 양력/음력·윤달, 시·분·시간 모름, 국내 19개 도시
+- 이름·별명, 양력/음력·윤달, 시·분·시간 모름, 전국 17개 시·도, 시·군·구·읍·면·동·리 검색
 - 지역 경도 보정, 00시/23시 일주 경계 선택, 1987/1988 국내 서머타임 보정
 - 일간·원국 4기둥, 한국식 지장간, 십성, 12운성, 연지 기준 12신살
 - 오행 도넛·막대, 십성 10개 막대, 상생·상극 관계도
@@ -70,3 +70,11 @@ AI·외부 API 호출 없이 작동하는 한국어 사주 풀이 웹사이트�
 생성 프롬프트:
 
 > Use case: illustration-story. Asset: wide hero illustration for a warm, bright Korean saju self-reflection website named Saju Garden; no lettering or text. A dreamy miniature paper-cut and hand-painted gouache garden floating on a soft warm ivory background. A large friendly lush green tree center-left, a terracotta red sun and little flame-shaped flower, golden ochre rolling hills and tiny ceramic pot, smooth pale silver stones, a winding translucent blue stream. Small walking figure with a backpack under the tree gives human warmth. Five elemental motifs integrated as a charming peaceful landscape, not a diagram. Wide panoramic 3:2 composition with generous airy ivory negative space, organic shapes, subtle paper grain, sophisticated editorial illustration, sage green, leaf green, coral, mustard, dusty blue, cream. Gentle sunlight, delightful detailed foliage, high quality original illustration. No zodiac symbols, no tarot cards, no text, no watermark. Illustration should fill most of the canvas with tree canopy and stream.
+
+## 출생 지역 검색
+
+고정 도시 목록 대신 지역명을 입력해 검색합니다. 전국 17개 시·도의 시·군·구·읍·면·동·리 총 19,577개 지역을 포함하며, 전체 경로로 같은 이름을 구분합니다. `전남 광양`, `경기 성남 분당`과 같은 도 약칭·띄어쓰기, 초성 검색을 지원합니다. 결과에서 지역을 선택해야 계산하며, 선택한 대표 경도를 실제 지역시 보정에 사용합니다. 기존 저장 프로필의 19개 도시명도 호환합니다.
+
+자료의 기준일·이용 조건·인천 신설 구 보완과 과거 지역명 처리 등은 [REGION-DATA.md](REGION-DATA.md)에 설명했습니다. 법정동과 행정동의 명칭은 다를 수 있으며, 해외 출생지·시간대는 지원하지 않습니다. 검색은 외부 API 없이 기기 안에서 동작합니다.
+
+대운 성별 기준은 드롭다운 대신 라디오 선택 버튼으로 표시해 작은 화면에서도 ‘남성 기준’·‘여성 기준’ 문구 전체가 보이도록 했습니다.

@@ -176,3 +176,48 @@ p,h1,h2,h3,h4,small,li,td,th{overflow-wrap:anywhere}
 @media(max-width:360px){.birth-form .field-heading label[for="birth-hour"] small{display:none}}
 .hero-copy>p{width:max-content;max-width:95%;background:#f1f2e8d9;padding:7px 10px;margin-left:-10px;border-radius:10px}
 .tiny-sun{font-family:"Segoe UI Symbol","Apple Symbols",sans-serif;font-variant-emoji:text}
+/* Searchable birthplace and fully visible dayun gender options. */
+.birth-form>.time-field,.birth-form>.region-field,.birth-form>.gender-field{grid-column:1/-1;min-width:0}
+.time-field{margin-top:2px;margin-bottom:15px}
+.time-field .time-inputs{max-width:100%}
+.region-field{position:relative;margin-bottom:16px;min-width:0}
+.region-picker{position:relative;min-width:0}
+.region-input-wrap{display:flex;align-items:center;gap:8px;min-width:0;border:1px solid #dde2d5;background:var(--paper);border-radius:9px;padding:0 11px}
+.region-input-wrap:focus-within{outline:2px solid #77976b;outline-offset:1px}
+.region-search-icon{flex:none;font-size:20px;color:#8b9a7a;line-height:1}
+.birth-form .region-input-wrap input[type=search]{appearance:none;-webkit-appearance:none;min-width:0;width:100%;border:0;background:transparent;padding:10px 0;outline:none;height:43px;font-size:13px;line-height:1.5}
+.region-input-wrap input::-webkit-search-cancel-button{display:none}
+.region-clear{flex:0 0 28px;width:28px;height:28px;border-radius:50%;background:#edf2e3;font-size:20px;line-height:1;color:#728465}
+.region-popup{position:absolute;z-index:30;left:0;right:0;top:calc(100% + 7px);background:#fffef9;border:1px solid #d4dfc6;border-radius:13px;padding:7px;box-shadow:0 12px 30px #28452d21;max-height:min(310px,45vh);max-width:100%;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scroll-margin:20px}
+.region-results-status{padding:7px 9px 10px;font-size:10px;color:#829171;line-height:1.75;word-break:normal}
+#city-options{display:grid;gap:3px;min-width:0}
+#city-options [role=option]{display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;background:transparent;border-radius:8px;padding:9px;min-width:0;min-height:54px;width:100%;color:#34533a}
+#city-options [role=option]:hover,#city-options [role=option].active{background:#eef3e4}
+.region-result-copy{flex:1;min-width:0;display:block}
+.region-result-copy strong{display:block;font-size:13px;line-height:1.6;font-weight:650;overflow-wrap:anywhere;word-break:normal}
+.region-result-copy small{display:block;font-size:10px;color:#8b977e;line-height:1.7;white-space:normal;overflow-wrap:anywhere;word-break:normal}
+.region-kind{flex:none;font-size:9px;background:#f0f3e7;color:#879775;padding:3px 6px;border-radius:6px;line-height:1.5;white-space:nowrap}
+.region-more{width:100%;border:1px solid #e0e7d5;background:#f1f5e8;border-radius:8px;padding:10px;font-size:11px;margin-top:6px;min-height:40px}
+.region-hint{font-size:10px;color:#939e88;line-height:1.8;margin-top:6px;word-break:normal}
+.region-selection{font-size:11px;line-height:1.8;margin-top:7px;padding:7px 9px;border-radius:8px;background:#eef3e5;color:#5a7849;overflow-wrap:anywhere;word-break:normal}
+.birth-form .gender-field{border:0;padding:0;margin:0 0 15px;min-inline-size:0;width:100%}
+.gender-field legend{padding:0;margin-bottom:8px;font-size:11px;font-weight:650;line-height:1.7;max-width:100%}
+.gender-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%;min-width:0}
+.birth-form .gender-options label{position:relative;display:flex;align-items:center;justify-content:center;gap:7px;min-width:0;min-height:44px;line-height:1.6;padding:9px 8px;margin:0;border:1px solid #dde2d5;border-radius:9px;background:var(--paper);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap}
+.gender-options input{flex:0 0 15px;width:15px;height:15px;margin:0;accent-color:#315b42}
+.gender-options span{display:block;flex:none;line-height:1.65;white-space:nowrap;overflow:visible}
+.birth-form .gender-options label:has(input:checked){border-color:#86a06d;background:#edf3e1;color:#315b42}
+.birth-form .gender-options label:has(input:focus-visible){outline:2px solid #77976b;outline-offset:2px}
+@media(max-width:520px){
+ .birth-form .region-input-wrap input[type=search]{font-size:16px;height:46px}
+ .region-clear{width:30px;height:30px;flex-basis:30px}
+ .region-hint{font-size:10px;line-height:1.9}
+ .region-results-status{font-size:11px}
+ .region-result-copy strong{font-size:14px}
+ .region-result-copy small{font-size:11px}
+ .region-popup{max-height:min(340px,48vh)}
+ .gender-field legend{font-size:12px}
+ .birth-form .gender-options label{font-size:14px;min-height:46px;padding:10px 7px;line-height:1.7;gap:6px}
+ .gender-options input{width:15px;height:15px;flex-basis:15px}
+}
+@media print{.region-popup{display:none!important}}

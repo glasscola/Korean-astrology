@@ -7,7 +7,7 @@ html=html.replace('<link rel="stylesheet" href="style.css">',`<style>${fs.readFi
 html=html.replace('<link rel="stylesheet" href="responsive.css">',`<style>${fs.readFileSync(path.join(dist,'responsive.css'),'utf8')}</style>`);
 html=html.replace('<link rel="manifest" href="manifest.webmanifest">','');
 html=html.replace('<link rel="apple-touch-icon" href="assets/app-icon-192.png">',`<link rel="apple-touch-icon" href="data:image/png;base64,${fs.readFileSync(path.join(dist,'assets/app-icon-192.png')).toString('base64')}">`);
-const files=['vendor/lunar.js','vendor/korean-lunar-calendar.min.js','engine.js','app.js'];
+const files=['vendor/lunar.js','vendor/korean-lunar-calendar.min.js','regions.js','engine.js','region-picker.js','app.js'];
 for(const file of files)html=html.replace(`<script defer src="${file}"></script>`,`<!-- bundled: ${file} -->`);
 html=html.replace('src="assets/garden-hero.webp"',`src="data:image/webp;base64,${fs.readFileSync(path.join(dist,'assets/garden-hero.webp')).toString('base64')}"`);
 html=html.replace('</body>',()=>files.map(f=>`<script>\n${fs.readFileSync(path.join(dist,f),'utf8').replace(/<\/script/gi,'<\\/script')}\n</script>`).join('\n')+'\n</body>');

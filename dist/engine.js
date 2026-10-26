@@ -45,7 +45,9 @@ function calculate(input){
  const now=new Date();if(wall.getTime()>now.getTime()+9*3600000)throw Error('아직 태어나지 않은 날짜는 입력할 수 없어요.');
  if(!input.unknown&&daylight(wall)&&h===2&&((sd.year===1987&&sd.month===5&&sd.day===10)||(sd.year===1988&&sd.month===5&&sd.day===8)))throw Error('이 날짜의 02시는 서머타임 시작으로 건너뛴 시간입니다. 출생 기록을 확인해 주세요.');
  const dst=daylight(wall)?60:0;const standard=new Date(wall.getTime()-dst*60000);
- const longitude=CITIES[input.city]??126.978;
+ const selectedRegion=root.SajuRegions?.resolve(input.city);
+ const longitude=selectedRegion?.longitude??CITIES[input.city];
+ if(!Number.isFinite(longitude))throw Error('검색 결과에서 태어난 지역을 다시 선택해 주세요.');
  const correction=input.correction?Math.round((longitude-135)*4):0;
  const local=new Date(standard.getTime()+correction*60000);
  const korea=dateSolar(standard),china=korea.nextHour(-1),ec=china.getLunar().getEightChar();

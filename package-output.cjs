@@ -1,0 +1,18 @@
+const fs=require('node:fs'),path=require('node:path');
+const project=__dirname,dist=path.join(project,'dist'),output=path.resolve(project,'../../outputs');
+fs.mkdirSync(output,{recursive:true});
+let html=fs.readFileSync(path.join(dist,'index.html'),'utf8');
+html=html.replace('<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">',`<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,${fs.readFileSync(path.join(dist,'assets/favicon.svg')).toString('base64')}">`);
+html=html.replace('<link rel="stylesheet" href="style.css">',`<style>${fs.readFileSync(path.join(dist,'style.css'),'utf8')}</style>`);
+html=html.replace('<link rel="stylesheet" href="responsive.css">',`<style>${fs.readFileSync(path.join(dist,'responsive.css'),'utf8')}</style>`);
+html=html.replace('<link rel="manifest" href="manifest.webmanifest">','');
+html=html.replace('<link rel="apple-touch-icon" href="assets/app-icon-192.png">',`<link rel="apple-touch-icon" href="data:image/png;base64,${fs.readFileSync(path.join(dist,'assets/app-icon-192.png')).toString('base64')}">`);
+const files=['vendor/lunar.js','vendor/korean-lunar-calendar.min.js','engine.js','app.js'];
+for(const file of files)html=html.replace(`<script defer src="${file}"></script>`,`<!-- bundled: ${file} -->`);
+html=html.replace('src="assets/garden-hero.webp"',`src="data:image/webp;base64,${fs.readFileSync(path.join(dist,'assets/garden-hero.webp')).toString('base64')}"`);
+html=html.replace('</body>',()=>files.map(f=>`<script>\n${fs.readFileSync(path.join(dist,f),'utf8').replace(/<\/script/gi,'<\\/script')}\n</script>`).join('\n')+'\n</body>');
+html=html.replace('</body>','<!-- MIT licensed libraries included. Full notices follow. -->\n'+['lunar-LICENSE.txt','korean-LICENSE.txt'].map(f=>'<!-- '+fs.readFileSync(path.join(dist,'vendor',f),'utf8').replace(/--/g,'—')+' -->').join('\n')+'\n</body>');
+fs.writeFileSync(path.join(output,'사주정원.html'),html);
+fs.cpSync(project,path.join(output,'saju-garden'),{recursive:true,filter:src=>!src.includes(path.sep+'.git')});
+console.log('Standalone HTML:',fs.statSync(path.join(output,'사주정원.html')).size,'bytes');
+console.log('Source directory:',path.join(output,'saju-garden'));

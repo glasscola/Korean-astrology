@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#315b42"><meta name="description" content="어려운 사주를 그림으로 쉽게. AI 없이 내 사주를 계산하고 오행, 십성, 관계와 시간의 흐름을 질문하며 살펴보세요.">
+  <title>사주정원 — 나를 이해하는 작은 정원</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="responsive.css">
+  <link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="assets/app-icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <script defer src="vendor/lunar.js"></script><script defer src="vendor/korean-lunar-calendar.min.js"></script><script defer src="engine.js"></script><script defer src="app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#report">풀이로 바로 가기</a>
+  <header class="site-header"><div class="header-inner">
+    <a class="brand" href="#"><span class="brand-mark" aria-hidden="true">✳</span><span>사주정원</span><small>SAJU GARDEN</small></a>
+    <nav aria-label="주요 메뉴"><a href="#report" data-go="overview">나의 사주</a><a href="#report" data-go="elements">오행 이야기</a><a href="#report" data-go="questions">궁금한 사주</a></nav>
+    <button class="btn ghost small" id="saved-open">저장한 정원 <span aria-hidden="true">↗</span></button>
+  </div></header>
+  <main>
+    <section class="hero wrap" aria-labelledby="hero-title">
+      <div class="hero-landscape">
+        <div class="hero-copy"><span class="eyebrow"><span class="tiny-sun">✳</span> 어려운 사주, 쉬운 그림으로</span><h1 id="hero-title">나를 이해하는<br>작은 <em>정원</em>을 만나요.</h1><p>타고난 기운은 어떤 모습일까요?<br>여덟 글자 속 나의 이야기를 천천히 펼쳐보세요.</p></div>
+        <img class="hero-art" src="assets/garden-hero.webp" alt="나무와 햇살, 언덕과 돌, 푸른 물길이 어우러진 다섯 기운의 정원" fetchpriority="high">
+        <div class="hero-caption"><span>木</span><span>火</span><span>土</span><span>金</span><span>水</span><i></i> 저마다의 기운으로, 저마다의 속도로.</div>
+      </div>
+      <form id="birth-form" class="birth-form">
+        <div class="form-heading"><span class="round-icon">🌱</span><div><h2>나의 정원 열기</h2><p>이름은 한글이나 별명도 괜찮아요.</p></div></div>
+        <label for="name">이름 또는 별명 <small>선택</small></label><input id="name" name="name" maxlength="24" placeholder="어떻게 불러드릴까요?" autocomplete="off">
+        <div class="field-heading"><label for="birth-year">태어난 날짜</label><div class="segmented" aria-label="달력 종류"><label><input type="radio" name="calendar" value="solar" checked><span>양력</span></label><label><input type="radio" name="calendar" value="lunar"><span>음력</span></label></div></div>
+        <div class="date-inputs" role="group" aria-label="태어난 날짜"><label class="date-part"><input id="birth-year" name="birth-year" type="text" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="0000" autocomplete="off" required aria-label="태어난 연도"><span>년</span></label><label class="date-part"><input id="birth-month" name="birth-month" type="text" inputmode="numeric" pattern="[0-9]{1,2}" maxlength="2" placeholder="00" autocomplete="off" required aria-label="태어난 월"><span>월</span></label><label class="date-part"><input id="birth-day" name="birth-day" type="text" inputmode="numeric" pattern="[0-9]{1,2}" maxlength="2" placeholder="00" autocomplete="off" required aria-label="태어난 일"><span>일</span></label></div><label class="check lunar-option" hidden><input type="checkbox" id="leap">음력 윤달이에요</label>
+        <div class="form-grid"><div><div class="field-heading"><label for="birth-hour">태어난 시간 <small>24시</small></label><label class="check compact"><input type="checkbox" id="unknown">모름</label></div><div class="time-inputs" role="group" aria-label="태어난 시간"><input id="birth-hour" type="text" inputmode="numeric" pattern="[0-9]{1,2}" maxlength="2" value="00" required aria-label="태어난 시 (0~23)"><span aria-hidden="true">:</span><input id="birth-minute" type="text" inputmode="numeric" pattern="[0-9]{1,2}" maxlength="2" value="00" required aria-label="태어난 분 (0~59)"></div></div><div><label for="city">태어난 지역 <small>국내</small></label><select id="city" required></select></div></div>
+        <div class="field-heading gender-row"><label for="gender">대운 계산 기준 <button type="button" class="help" data-help="gender" aria-label="대운 성별 기준 설명">?</button></label><select id="gender" required><option value="">선택</option><option value="male">남성 기준</option><option value="female">여성 기준</option></select></div>
+        <details class="advanced"><summary>시간 보정 · 계산 설정 <span>⌄</span></summary><label class="check"><input type="checkbox" id="correction" checked>출생지 경도에 따른 지역시 보정</label><label for="boundary">하루가 바뀌는 기준<select id="boundary"><option value="0">자정 00:00</option><option value="23">자시 시작 23:00</option></select></label><p>1962년 이후 국내 출생 지원. 1987·1988년 서머타임은 자동 보정합니다.</p></details>
+        <p id="form-error" role="alert" hidden></p><button class="btn primary form-submit" type="submit">나의 사주 펼쳐보기 <span>↗</span></button>
+        <p class="privacy"><span>♧</span> 입력 정보는 서버로 보내지 않아요.</p>
+      </form>
+    </section>
+    <div class="wrap intro-strip"><span>읽는 방법</span><p>그림을 누르면 더 자세히, <strong>궁금한 질문을 누르면 나에게 맞게.</strong></p><button class="text-button" data-go="questions">질문으로 둘러보기 ↗</button></div>
+    <section class="wrap start-guide" id="start-guide"><div class="screen-title"><span class="eyebrow">YOUR GARDEN STARTS HERE</span><h2>당신만의 정원을 기다리고 있어요.</h2><p>태어난 날짜와 시간을 입력하면, 다섯 기운과 나의 이야기가 펼쳐져요.</p></div><div id="start-guide-gallery" class="start-guide-gallery" aria-label="다섯 기운 안내"></div><button class="btn primary" type="button" data-start="form">내 정보 입력하기 ↗</button></section>
+    <section class="report wrap" id="report" aria-labelledby="report-title" hidden>
+      <div class="report-heading"><div><div id="profile-badge" class="eyebrow">MY GARDEN · 나의 사주 풀이</div><h2 id="report-title"><span id="report-name">나</span>님의 사주정원<span class="leaf-dot">✦</span></h2><p id="profile-meta"></p></div><div class="report-actions"><button class="btn small ghost" id="save-profile">♡ 이 기기에서 저장</button><button class="icon-button" id="export-report" aria-label="풀이 파일 저장" title="풀이 파일 저장">↓</button><button class="icon-button" id="print-report" aria-label="풀이 인쇄" title="풀이 인쇄">⎙</button></div></div>
+      <p id="calculation-notice" class="notice" hidden></p>
+      <nav class="report-tabs" aria-label="풀이 항목"><button class="active" data-tab="overview">한눈에 보기</button><button data-tab="elements">오행과 십성</button><button data-tab="symbols">관계와 상징</button><button data-tab="timeline">시간의 흐름</button><button data-tab="questions">질문으로 보기 <span>↗</span></button></nav>
+      <div id="overview-panel" class="tab-panel"></div><div id="elements-panel" class="tab-panel" hidden></div><div id="symbols-panel" class="tab-panel" hidden></div><div id="timeline-panel" class="tab-panel" hidden></div><div id="questions-panel" class="tab-panel" hidden></div>
+    </section>
+    <section class="wrap roots"><div><span class="eyebrow">천천히, 나를 알아가는 시간</span><h2>정해진 답보다,<br>나를 위한 좋은 질문.</h2></div><p>사주는 태어난 때의 글자를 전통적인 상징으로 읽는 방법이에요.<br>계산한 정보와 해석을 구분하고, 실제 경험에 비춰 살펴보세요.<br>어떤 글자도 당신의 가능성을 전부 설명하지는 않아요.</p><button class="btn ghost" id="method-open">계산 기준과 참고 자료 ↗</button></section>
+  </main>
+  <footer class="wrap site-footer"><a class="brand" href="#"><span class="brand-mark">✳</span> 사주정원</a><span>저마다의 기운으로, 저마다의 속도로.</span><span>AI 없이 · 내 기기에서 계산</span></footer>
+  <dialog id="detail-dialog"><button class="dialog-close icon-button" aria-label="닫기">×</button><div id="detail-content"></div></dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+</body></html>

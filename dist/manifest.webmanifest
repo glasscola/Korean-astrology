@@ -1,0 +1,16 @@
+{
+  "id": "./",
+  "name": "사주정원 — 그림으로 읽는 사주",
+  "short_name": "사주정원",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f8f8f1",
+  "theme_color": "#315b42",
+  "description": "AI 없이, 내 기기에서 계산하는 그림 사주 풀이",
+  "icons": [
+    {"src":"assets/app-icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
+    {"src":"assets/app-icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  ]
+}

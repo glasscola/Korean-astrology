@@ -29,13 +29,11 @@ jobs:
           node-version: 24
       - name: Verify calculation and public defaults
         run: |
-          node --check dist/app.js
-          node --check dist/engine.js
-          node --check dist/regions.js
-          node --check dist/region-picker.js
+          for file in dist/*.js dist/data/hanja-*.js; do node --check "$file"; done
           node test-engine.cjs
           node test-public.cjs
           node test-regions.cjs
+          node test-reading.cjs
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload static website

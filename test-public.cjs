@@ -9,12 +9,16 @@ check('첫 방문에 특정인의 날짜·시간 또는 사주 결과를 자동 
  for(const id of ['birth-hour','birth-minute'])assert.match(html,new RegExp('<input[^>]+id="'+id+'"[^>]+value="00"'));
 });
 check('게시 파일의 스크립트·스타일·그림·앱 아이콘이 모두 존재함',()=>{
- for(const match of html.matchAll(/(?:src|href)="([^"#]+)"/g)){const file=match[1];if(file.startsWith('http')||file.startsWith('data:'))continue;assert.ok(fs.existsSync(path.join(root,file)),file);}
+ for(const match of html.matchAll(/(?:src|href)="([^"#]+)"/g)){const file=match[1].split('?')[0];if(file.startsWith('http')||file.startsWith('data:'))continue;assert.ok(fs.existsSync(path.join(root,file)),file);}
+ assert.ok(!html.includes('src="regions.js')&&!html.includes('src="vendor/lunar.js'));
  const manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.webmanifest'),'utf8'));
  assert.equal(manifest.start_url,'./');assert.equal(manifest.scope,'./');
  for(const icon of manifest.icons)assert.ok(fs.existsSync(path.join(root,icon.src)),icon.src);
 });
 check('UI에서 외부 API·AI 요청 코드를 포함하지 않음',()=>{
- assert.ok(!/\bfetch\s*\(|XMLHttpRequest|new\s+WebSocket/.test(js));
+ for(const file of fs.readdirSync(root).filter(f=>f.endsWith('.js')&&f!=='regions.js')){
+  const code=fs.readFileSync(path.join(root,file),'utf8');
+  assert.ok(!/\bfetch\s*\(|XMLHttpRequest|new\s+WebSocket/.test(code),file);
+ }
 });
 console.log(`${checks} publication checks passed.`);

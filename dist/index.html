@@ -10,7 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="assets/app-icon-192.png">
   <link rel="stylesheet" href="style.css?v=3">
-  <link rel="stylesheet" href="forms.css?v=3">
+  <link rel="stylesheet" href="forms.css?v=4">
   <link rel="stylesheet" href="reading.css?v=3">
   <script defer src="ui.js?v=2"></script>
   <script defer src="scenes.js?v=3"></script>
@@ -21,10 +21,10 @@
   <script defer src="report-view.js?v=2"></script>
   <script defer src="detail-view.js?v=2"></script>
   <script defer src="timing-view.js?v=2"></script>
-  <script defer src="name.js?v=3"></script>
-  <script defer src="name-picker.js?v=1"></script>
+  <script defer src="name.js?v=4"></script>
+  <script defer src="name-picker.js?v=2"></script>
   <script defer src="region-picker.js?v=2"></script>
-  <script defer src="app.js?v=4"></script>
+  <script defer src="app.js?v=5"></script>
 </head>
 <body>
   <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -53,6 +53,7 @@
       </div>
       <form class="form-card" id="birth-form" novalidate>
         <span class="eyebrow">내 정보 입력</span><h2>내 사주 보기</h2>
+        <div id="birth-name" class="form-block"></div>
         <div class="form-block">
           <div class="field-heading"><label for="birth-year">태어난 날짜</label><div class="choice-inline" role="group" aria-label="달력 종류"><label><input type="radio" name="calendar" value="solar" checked><span>양력</span></label><label><input type="radio" name="calendar" value="lunar"><span>음력</span></label></div></div>
           <div class="date-inputs" role="group" aria-label="태어난 날짜">
@@ -85,10 +86,6 @@
           <div class="gender-options"><label><input type="radio" name="gender" value="male"><span>남성 기준</span></label><label><input type="radio" name="gender" value="female"><span>여성 기준</span></label></div>
           <small class="hint">10년 단위 흐름을 보고 싶을 때 선택해요.</small>
         </fieldset>
-        <details class="form-details">
-          <summary>이름 풀이 <span>선택</span></summary>
-          <div id="birth-name"></div>
-        </details>
         <details class="form-details">
           <summary>출생 시간 계산 설정</summary>
           <label class="check"><input type="checkbox" id="correction" checked> 태어난 지역에 맞춰 시간 보정</label>

@@ -87,7 +87,6 @@
     field('approx').value=p.approx||'';
     regionPicker.setValue(p.city);
     nameForm=root.SajuNamePicker.mount(nameBox,p.nameDetails);
-    nameBox.closest('details').open=Boolean(p.nameDetails);
     syncForm();
   }
 
@@ -107,7 +106,6 @@
       if(name==='name')root.SajuName.mount(host,model.result.input.nameDetails,model,next=>{
         model.result.input.nameDetails=next;
         nameForm=root.SajuNamePicker.mount(nameBox,next);
-        nameBox.closest('details').open=Boolean(next);
         showHeader();
       });
       if(name==='timing')root.SajuTiming.mount(host,model);
@@ -117,8 +115,7 @@
   }
   function showHeader(){
     const r=model.result;
-    const details=r.input.nameDetails;
-    const display=details?details.family+details.given:r.input.name;
+    const display=root.SajuName.display(r.input.nameDetails)||r.input.name;
     field('report-title').textContent=display&&display!=='나'?display+'님의 사주':'나의 사주';
     field('profile-meta').textContent=(r.input.calendar==='lunar'?'음력 ':'양력 ')+r.input.date.replace(/-/g,'. ')+
       (r.input.calendar==='lunar'&&r.input.leap?' (윤달)':'')+' · '+(r.input.unknown?(r.approxLabel?r.approxLabel+'쯤':'출생 시간 모름'):r.input.time)+' · '+r.input.city;
@@ -164,7 +161,7 @@
   function saved(){
     const list=readProfiles();
     U.dialog('<h2>저장한 풀이</h2><p>이 브라우저에 저장된 출생 정보예요.</p>'+
-      (list.length?list.map((p,i)=>'<article class="saved-entry"><div><b>'+esc(p.nameDetails?.given||p.name||'나의 사주')+'</b><p>'+esc(p.date)+' · '+esc(p.city)+'</p></div>'+
+      (list.length?list.map((p,i)=>'<article class="saved-entry"><div><b>'+esc(root.SajuName.display(p.nameDetails)||p.name||'나의 사주')+'</b><p>'+esc(p.date)+' · '+esc(p.city)+'</p></div>'+
         '<div><button type="button" class="button subtle" data-open-saved="'+i+'">열기</button><button type="button" class="text-button" data-remove-saved="'+i+'">삭제</button></div></article>').join(''):
       '<p class="empty-note">저장한 풀이가 없어요. 결과에서 ‘이 기기에 저장’을 눌러 보세요.</p>'));
   }

@@ -28,7 +28,7 @@
     if(!given)throw Error('이름을 입력해 주세요.');
     if(!safeLength(family,4)||!safeLength(given,12))throw Error('성은 최대 4글자, 이름은 최대 12글자로 입력해 주세요.');
     if(mode==='hanja'&&![...split(family),...split(given)].every(c=>han.test(c))){
-      throw Error('입력한 소리의 한자 후보를 골라 주세요. 한글 이름이라면 ‘한글 입력’을 선택해 주세요.');
+      throw Error('한자 이름의 글자를 확인해 주세요.');
     }
     if(mode!=='hanja'&&![family,given].filter(Boolean).every(c=>hangul.test(c.normalize('NFC'))))throw Error('한글 이름을 입력해 주세요.');
     return {mode,family,given,meaning:mode==='korean'?meaning:''};
@@ -48,45 +48,92 @@
   }
 
   let searchIndex;
-  const familiar=new Set('金李朴崔鄭姜趙尹張林韓吳徐申權黃安宋柳洪全高文梁孫裵白許南沈盧河郭成車周禹朱任羅田閔兪劉鄔丁秦士修守洙受水洙秀壽敏民旼旻珉玟美恩志智芝知惠慧賢玄昇勝承俊準浚埈叡藝睿仁人印潤允侖正貞英榮永映旻宙宇佑祐友真眞珍鎭辰進振炳秉昊浩皓善宣瑄延妍姸蓮多和禾夏河柔宥有玹鉉允瑞書抒舒燦輝奎圭建健大泰太珪');
+  // Editorial ordering for given names. The primary surnames use the 2015 census order.
+  const givenPriority='吉東同童桐弘洪紅鴻泓敏旻旼珉民玟秀修守洙壽受水士美恩志智芝知惠慧賢玄昇勝承俊準浚埈叡藝睿仁人印潤允侖正貞英榮永映宙宇佑祐友眞真珍鎭辰進振炳秉昊浩皓善宣瑄延妍姸蓮多和禾夏河柔宥有玹鉉瑞書抒舒燦輝奎圭建健大泰太珪';
+  const surnamePriority='金李朴崔鄭姜趙尹張林韓吳徐申權黃安宋全洪柳高文梁孫裵白許南沈盧河郭成車周禹朱任羅田閔兪劉丁秦';
+  const clanRows=[
+    ['김해','김','金'],['밀양','박','朴'],['전주','이','李'],['경주','김','金'],['경주','이','李'],
+    ['진주','강','姜'],['경주','최','崔'],['광산','김','金'],['파평','윤','尹'],['청주','한','韓'],
+    ['안동','권','權'],['인동','장','張'],['평산','신','申'],['순흥','안','安'],['안동','김','金'],
+    ['남양','홍','洪'],['동래','정','鄭'],['해주','오','吳'],['전주','최','崔'],['남평','문','文']
+  ];
+  const clans=new Map(clanRows.map(([place,reading,glyph])=>[place+reading,{glyph,reading,meaning:place+' '+reading+'씨'}]));
   function byReading() {
     searchIndex ??= Promise.all(Array.from({length:count},(_,i)=>part(i))).then(()=>{
       const index=new Map();
       for(const entries of shards.values()){
         for(const [glyph,[readings]] of Object.entries(entries)){
           if(!han.test(glyph))continue;
-          for(const [reading,meaning] of readings){
+          for(const [reading,gloss] of readings){
             if(!index.has(reading))index.set(reading,[]);
-            index.get(reading).push({glyph,reading,meaning:meaning.split(',')[0]});
+            index.get(reading).push({glyph,reading,meanings:gloss.split(',').map(term=>term.trim()).filter(Boolean)});
           }
         }
-      }
-      for(const hits of index.values()){
-        hits.sort((a,b)=>Number(familiar.has(b.glyph))-Number(familiar.has(a.glyph))||
-          Number(Boolean(b.meaning))-Number(Boolean(a.meaning))||a.glyph.localeCompare(b.glyph,'ko'));
       }
       return index;
     }).catch(error=>{searchIndex=null;throw error;});
     return searchIndex;
   }
 
-  async function search(query){
-    if(/^[가-힣]$/.test(query))return (await byReading()).get(query)||[];
-    if(!han.test(query))return [];
-    const {glyph,readings,strokes}=await lookup(query);
-    if(!readings.length&&strokes==null)return [];
-    return [{glyph,reading:readings.map(([sound])=>sound).join(' · '),
-      meaning:readings.find(([,gloss])=>gloss)?.[1].split(',')[0]||''}];
+  async function search(input,{reading='',surname=false}={}){
+    const raw=input.trim();
+    if(han.test(raw)){
+      const {glyph,readings,strokes}=await lookup(raw);
+      if(!readings.length&&strokes==null)return [];
+      const definition=readings.find(([sound,gloss])=>sound===reading&&gloss)||readings.find(([,gloss])=>gloss);
+      return [{glyph,reading:readings.map(([sound])=>sound).join(' · '),meaning:definition?.[1].split(',')[0]||''}];
+    }
+    const query=clean(raw.normalize('NFC'));
+    if(!hangul.test(query))return [];
+    const clan=clans.get(query.replace(/씨$/,''));
+    if(clan)return [clan];
+    const index=await byReading();
+    const priority=surname?surnamePriority+givenPriority:givenPriority+surnamePriority;
+    const rank=glyph=>{
+      const position=priority.indexOf(glyph);
+      return position<0?priority.length:position;
+    };
+    const order=(a,b)=>rank(a.glyph)-rank(b.glyph)||Number(Boolean(b.meaning))-Number(Boolean(a.meaning))||a.glyph.localeCompare(b.glyph,'ko');
+    if(query.length===1){
+      return (index.get(query)||[]).map(hit=>({glyph:hit.glyph,reading:hit.reading,meaning:hit.meanings[0]||''})).sort(order);
+    }
+    const bySound=(index.get(query.at(-1))||[]).flatMap(hit=>{
+      const meaning=hit.meanings.find(term=>clean(term).includes(query)||clean(term).includes(query.slice(0,-1)));
+      return meaning?[{glyph:hit.glyph,reading:hit.reading,meaning}]:[];
+    });
+    if(bySound.length)return bySound.sort(order);
+    return (index.get(reading)||[]).flatMap(hit=>{
+      const meaning=hit.meanings.find(term=>clean(term).includes(query));
+      return meaning?[{glyph:hit.glyph,reading:hit.reading,meaning}]:[];
+    }).sort(order);
   }
 
-  function searchToken(text){
-    const sound=/[가-힣]|[ᄀ-ᄒ][ᅡ-ᅵ][ᆨ-ᇂ]?/.exec(text);
-    if(sound)return {query:sound[0].normalize('NFC'),start:sound.index,end:sound.index+sound[0].length,isReading:true};
-    const trimmed=text.trim();
-    if(!han.test(trimmed))return null;
-    const start=text.indexOf(trimmed);
-    return {query:trimmed,start,end:start+trimmed.length,isReading:false};
+  function nameParts(text){
+    // Normalize Hangul syllables while preserving the user's Hanja and variant selectors.
+    const groups=text.trim().split(/\s+/).map(word=>word.replace(/[ᄀ-ᄒ][ᅡ-ᅵ][ᆨ-ᇂ]?/g,sound=>sound.normalize('NFC')));
+    const letters=split(groups.join(''));
+    const familySize=groups.length>1?split(groups[0]).length:Number(letters.length>1);
+    return {letters,familySize};
   }
+
+  function fromEditor(parts,picks,enabled,meaning=''){
+    const {letters,familySize}=parts;
+    if(!letters.length)return null;
+    if(!letters.every(letter=>hangul.test(letter)||han.test(letter)))throw Error('이름에는 한글이나 한자만 입력해 주세요.');
+    const hangulName=letters.every(letter=>hangul.test(letter))?letters.join(''):'';
+    const make=(mode,values)=>validate(mode,values.slice(0,familySize).join(''),values.slice(familySize).join(''),meaning);
+    if(enabled&&letters.every((_,i)=>picks[i]&&han.test(picks[i]))){
+      const value=make('hanja',picks);
+      if(hangulName)value.hangul=hangulName;
+      return value;
+    }
+    if(!hangulName)throw Error('이름에는 한글을 입력하거나 한자 이름을 모두 채워 주세요.');
+    const value=make('korean',letters);
+    if(enabled)value.hanjaDraft=letters.map((_,i)=>picks[i]||'');
+    return value;
+  }
+
+  const display=name=>name?.hangul||(name?(name.family||'')+(name.given||''):'');
 
   const onset=['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
   function soundCard(hangulText) {
@@ -100,7 +147,8 @@
     if(!name){target.innerHTML='<div class="empty-note"><b>이름을 넣으면 여기에서 풀이를 볼 수 있어요.</b><p>한자가 없다면 한글 이름의 소리와 내가 알려준 뜻을 함께 볼 수 있어요.</p></div>';return;}
     if(name.mode!=='hanja'){
       target.innerHTML='<div class="name-summary"><span class="eyebrow">한글 이름</span><h3>'+esc(name.family+name.given)+'</h3>'+
-        (name.meaning?'<p>알려주신 이름의 뜻 · '+esc(name.meaning)+'</p>':'<p>이름을 한 음절씩 나눠 소리의 구성을 살펴봤어요.</p>')+'</div>'+soundCard(name.family+name.given);
+        (name.meaning?'<p>알려주신 이름의 뜻 · '+esc(name.meaning)+'</p>':'<p>이름을 한 음절씩 나눠 소리의 구성을 살펴봤어요.</p>')+
+        (name.hanjaDraft?'<p>한자 이름을 모두 고르면 글자의 뜻도 볼 수 있어요.</p>':'')+'</div>'+soundCard(name.family+name.given);
       return;
     }
     target.innerHTML='<p class="empty-note" role="status">글자 뜻과 획수를 확인하고 있어요.</p>';
@@ -113,6 +161,7 @@
     const images=[...new Set(given.flatMap(item=>motifs.filter(([set])=>set.includes(item.base)).map(([,e])=>e)))];
     const knownStrokes=items.every(x=>x.strokes!=null);
     target.innerHTML='<div class="name-summary"><span class="eyebrow">한자 이름</span><h3 lang="ko">'+esc(name.family+name.given)+'</h3>'+
+      (name.hangul?'<p>'+esc(name.hangul)+'</p>':'')+
       (terms.length?'<p>이름에 담긴 대표 뜻 · '+terms.map(t=>'‘'+esc(t)+'’').join(' · ')+'</p>':'<p>이 이름은 사전에서 확인한 범위까지 표시했어요.</p>')+'</div>'+
       '<div class="glyph-list">'+items.map(item=>{
         const meanings=[...new Set(item.readings.flatMap(([,g])=>g.split(',').map(t=>t.trim()).filter(Boolean)))];
@@ -129,7 +178,7 @@
   }
 
   function mount(host,name,model,onSave) {
-    host.innerHTML='<div class="section-lead"><div><span class="eyebrow">이름의 글자와 뜻</span><h2>내 이름은 어떤 이야기일까요?</h2><p>한자를 검색하거나 한글 이름을 입력해 보세요. 이름 풀이는 선택이에요.</p></div>'+root.SajuScene('name')+'</div>'+
+    host.innerHTML='<div class="section-lead"><div><span class="eyebrow">이름의 글자와 뜻</span><h2>내 이름은 어떤 이야기일까요?</h2><p>이름을 입력하고, 한자가 있다면 글자별로 찾아보세요.</p></div>'+root.SajuScene('name')+'</div>'+
       '<div class="name-layout"><form class="card name-editor" novalidate><div data-editor></div><p data-name-error class="error" role="alert" hidden></p><button type="submit" class="button primary">이 이름 풀이 보기 →</button></form><div class="card name-result" aria-live="polite" data-name-result></div></div>';
     const editor=root.SajuNamePicker.mount($('[data-editor]',host),name), result=$('[data-name-result]',host), error=$('[data-name-error]',host);
     let ticket=0;
@@ -155,5 +204,5 @@
     });
     render(name);
   }
-  root.SajuName={install:(i,data)=>shards.set(i,data),validate,lookup,search,searchToken,mount};
+  root.SajuName={install:(i,data)=>shards.set(i,data),validate,lookup,search,nameParts,fromEditor,display,isHanja:char=>han.test(char),mount};
 })(window);

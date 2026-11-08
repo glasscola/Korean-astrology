@@ -35,6 +35,7 @@
 - [libhangul 한자 사전](https://github.com/libhangul/libhangul/blob/main/data/hanja/hanja.txt), BSD 3-Clause. 단일 한자의 훈음 자료만 사용하며 [고지](dist/data/libhangul-LICENSE.txt)를 포함합니다.
 - [Unihan 17.0](https://www.unicode.org/Public/17.0.0/ucd/Unihan.zip), Unicode License v3. 한국 독음과 일반 획수 보조 자료입니다. [고지](dist/data/unicode-LICENSE.txt).
 - 한자 자료 재생성은 `python scripts/build-name-data.py <hanja.txt> <Unihan.zip> <unicode-license.txt>`입니다. 데이터 수와 사전 원본 SHA-256은 `dist/data/hanja-meta.json`에 있습니다.
+- 본관과 성씨를 함께 입력하는 검색어는 [2015 인구주택총조사 전수집계결과 표 22](https://sri.kostat.go.kr/boardDownload.es?bid=203&list_no=356061&seq=8)의 상위 20개 조합을 지원합니다. 이름 글자는 서비스에서 편집한 우선순위로 보여줍니다.
 - [lunar-javascript](https://github.com/6tail/lunar-javascript)와 [korean-lunar-calendar](https://github.com/usingsky/korean_lunar_calendar_js), MIT. `dist/vendor/`에 고지를 포함합니다.
 - [한국천문연구원](https://astro.kasi.re.kr/life/pageView/8), [한국민족문화대백과사전 사주](https://encykorea.aks.ac.kr/Article/E0025957), [출생 지역 데이터](REGION-DATA.md).
 - 표지와 생활 장면은 `dist/assets/watercolor/`의 수채화 삽화입니다. [제작 기록과 프롬프트](ARTWORK.md).

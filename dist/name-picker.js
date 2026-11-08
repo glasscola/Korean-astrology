@@ -1,169 +1,152 @@
 (function(root){
   'use strict';
   const U=root.SajuUI, $=U.$, esc=U.escape, names=root.SajuName;
-  const pageSize=12;
+  const pageSize=10;
   let instance=0;
 
   function mount(host,initial){
     const id='name-picker-'+(++instance);
-    const drafts={hanja:{family:'',given:'',meaning:''},korean:{family:'',given:'',meaning:''}};
-    let mode=initial?(initial.mode==='hanja'?'hanja':'korean'):'';
-    if(mode)drafts[mode]={...drafts[mode],...initial};
     host.innerHTML='<div class="name-fields">'+
-      '<fieldset class="name-modes"><legend>입력 방법 <small>선택</small></legend><div class="gender-options">'+
-      '<label><input type="radio" name="'+id+'" data-name-mode value="hanja"><span>한자 검색</span></label>'+
-      '<label><input type="radio" name="'+id+'" data-name-mode value="korean"><span>한글 입력</span></label>'+
-      '</div></fieldset>'+
-      '<p class="hint" data-mode-hint>이름 풀이를 원할 때만 입력해 주세요.</p>'+
-      '<div class="name-entry" hidden><p class="hint" id="'+id+'-hint" data-name-hint></p>'+
-      '<div class="name-pair">'+
-      '<div class="name-slot"><label for="'+id+'-family">성 <small>선택</small></label><input id="'+id+'-family" data-field="family" autocomplete="off" spellcheck="false" aria-describedby="'+id+'-hint"></div>'+
-      '<div class="name-slot"><label for="'+id+'-given">이름</label><input id="'+id+'-given" data-field="given" autocomplete="off" spellcheck="false" aria-describedby="'+id+'-hint"></div>'+
-      '</div>'+
-      '<label class="stack" data-meaning hidden>내가 아는 이름의 뜻 <small>선택</small><input data-field="meaning" maxlength="160" placeholder="예: 밝고 건강하게 자라길 바라는 뜻"></label>'+
-      '<button type="button" class="text-button name-clear" data-name-clear>이름 입력 건너뛰기</button>'+
-      '</div></div>';
+      '<label for="'+id+'">이름 <small>선택</small></label><div class="name-heading">'+
+      '<input id="'+id+'" data-name autocomplete="off" spellcheck="false" maxlength="48" placeholder="예: 홍길동">'+
+      '<label class="check"><input type="checkbox" data-hanja aria-controls="'+id+'-hanja"> 한자 이름 선택</label></div>'+
+      '<div class="name-search" id="'+id+'-hanja" data-picker hidden>'+
+      '<p class="hint" data-empty>위에 이름을 적으면 한자 이름을 고를 수 있어요.</p>'+
+      '<div class="name-search-body" data-body hidden>'+
+      '<div class="name-slots" role="group" aria-label="한자 이름 글자"></div>'+
+      '<label class="stack" for="'+id+'-query">한자 검색</label>'+
+      '<input id="'+id+'-query" data-query type="search" autocomplete="off" spellcheck="false" maxlength="40" placeholder="예: 홍, 붉을 홍, 전주 이">'+
+      '<p class="hint" role="status" data-status></p><div class="name-candidates"></div>'+
+      '<button type="button" class="text-button" data-more hidden>더 보기 ↓</button>'+
+      '</div></div></div>';
+    const name=$('[data-name]',host), checked=$('[data-hanja]',host), picker=$('[data-picker]',host);
+    const body=$('[data-body]',host), slots=$('.name-slots',host), query=$('[data-query]',host);
+    const status=$('[data-status]',host), list=$('.name-candidates',host), more=$('[data-more]',host);
+    const savedDisplay=names.display(initial);
+    const oldFamily=names.nameParts(initial?.family||'').letters.length;
+    const savedLetters=names.nameParts(savedDisplay).letters;
+    name.value=oldFamily>1&&oldFamily<savedLetters.length?
+      savedLetters.slice(0,oldFamily).join('')+' '+savedLetters.slice(oldFamily).join(''):savedDisplay;
+    checked.checked=initial?.mode==='hanja'||Array.isArray(initial?.hanjaDraft);
+    function parseName(text){
+      const parsed=names.nameParts(text);
+      if(initial?.given&&parsed.letters.join('')===savedDisplay)parsed.familySize=oldFamily;
+      return parsed;
+    }
+    let parts=parseName(name.value);
+    let picks=initial?.mode==='hanja'?names.nameParts((initial.family||'')+initial.given).letters:
+      parts.letters.map((_,i)=>initial?.hanjaDraft?.[i]||'');
+    const nextBlank=()=>parts.letters.findIndex((_,i)=>!picks[i]);
+    let active=Math.max(0,nextBlank()), revision=0, hits=[], limit=pageSize;
 
-    const entry=$('.name-entry',host);
-    const field=key=>$('[data-field="'+key+'"]',host);
-    const radio=value=>$('[data-name-mode][value="'+value+'"]',host);
-    const family=field('family'), given=field('given'), meaning=field('meaning');
-    const panel=document.createElement('div');
-    panel.className='name-search';
-    panel.hidden=true;
-    panel.innerHTML='<p class="hint" role="status" data-status></p><div class="name-candidates"></div>'+
-      '<button type="button" class="text-button" data-more hidden>후보 더 보기 ↓</button>';
-    const status=$('[data-status]',panel), list=$('.name-candidates',panel), more=$('[data-more]',panel);
-    let active, hits=[], limit=pageSize, revision=0;
-
-    function close(){
-      revision++;
-      active=null;
-      panel.hidden=true;
+    function drawSlots(){
+      slots.innerHTML=parts.letters.map((letter,i)=>{
+        const pick=picks[i];
+        return '<button type="button" class="name-slot" data-slot="'+i+'" aria-pressed="'+(i===active)+'" aria-label="'+
+          esc((i+1)+'번째 글자 '+letter+(pick?', '+pick+' 선택됨':''))+'"><span>'+esc(letter)+'</span><b lang="ko">'+
+          esc(pick||'＋')+'</b></button>';
+      }).join('');
     }
 
-    function sync(){
-      close();
-      entry.hidden=!mode;
-      entry.dataset.mode=mode;
-      $('[data-mode-hint]',host).hidden=Boolean(mode);
-      $('[data-meaning]',entry).hidden=mode!=='korean';
-      $('[data-name-hint]',entry).textContent=mode==='hanja'?
-        '한글로 이름을 쓰고 한 글자씩 골라요. 한자를 바로 입력해도 돼요.':
-        '한자를 모르거나 한글 이름을 쓰는 경우에 선택해요.';
-      family.placeholder=mode==='hanja'?'예: 김 또는 金':'예: 김';
-      given.placeholder=mode==='hanja'?'예: 민수 또는 敏秀':'예: 하늘';
-      for(const key of ['family','given','meaning'])field(key).value=drafts[mode]?.[key]||'';
-      if(mode)radio(mode).checked=true;
-    }
-
-    function draw(from=0){
+    function drawResults(from=0){
       if(from===0)list.replaceChildren();
       list.insertAdjacentHTML('beforeend',hits.slice(from,limit).map(({glyph,reading,meaning},i)=>
-        '<button type="button" class="name-choice" data-candidate="'+(from+i)+'"><b lang="ko">'+esc(glyph)+
-        '</b><span><strong>'+esc(reading||'독음 미확인')+'</strong>'+
-        (meaning?'<small>'+esc(meaning)+'</small>':'')+'</span></button>').join(''));
+        '<button type="button" class="name-choice" data-candidate="'+(from+i)+'"><b lang="ko">'+esc(glyph)+'</b><span>'+
+        '<strong>'+esc(meaning||reading||'입력한 글자')+'</strong></span></button>').join(''));
       more.hidden=limit>=hits.length;
     }
 
-    async function suggest(input,{afterChoice=false,first=false}={}){
-      const token=names.searchToken(input.value);
-      if(mode!=='hanja'||!token||(afterChoice&&!token.isReading)){close();return;}
+    async function search({focus=false}={}){
       const ticket=++revision;
-      active={input,token,value:input.value};
-      input.after(panel);
-      panel.hidden=false;
-      hits=[];limit=pageSize;draw();
-      status.textContent='한자 후보를 찾고 있어요.';
+      hits=[];limit=pageSize;drawResults();
+      if(!checked.checked||!parts.letters.length)return;
+      const reading=parts.letters[active], text=query.value.trim()||reading;
+      const options={reading,surname:active<parts.familySize};
+      status.textContent='한자를 찾고 있어요.';
       try{
-        const matches=await names.search(token.query);
+        const matches=await names.search(text,options);
         if(ticket!==revision)return;
-        hits=matches;
-        status.textContent=hits.length?'‘'+token.query+'’ 검색 결과 '+hits.length.toLocaleString('ko')+'개 · 이름에 쓰는 글자를 골라 주세요.':
-          '‘'+token.query+'’의 한자를 찾지 못했어요. 입력을 확인해 주세요.';
-        draw();
-        if(first&&document.activeElement===input)list.firstElementChild?.focus();
+        hits=matches.length||!names.isHanja(text)?matches:[{glyph:text,reading:'',meaning:''}];
+        status.textContent=hits.length?'‘'+reading+'’ 자리에 넣을 한자를 골라 주세요.':'맞는 한자가 없어요. 음이나 뜻을 확인해 주세요.';
+        drawResults();
+        if(focus&&document.activeElement===query)list.firstElementChild?.focus();
       }catch(error){
         if(ticket===revision)status.textContent=error.message;
       }
     }
 
-    for(const input of [family,given]){
-      input.addEventListener('compositionstart',close);
-      input.addEventListener('compositionend',()=>suggest(input));
-      input.addEventListener('input',e=>{if(!e.isComposing)suggest(input);});
-      input.addEventListener('focus',()=>{if(active&&active.input!==input)close();});
-      input.addEventListener('keydown',e=>{
-        if(e.isComposing||e.keyCode===229||mode!=='hanja')return;
-        const token=names.searchToken(input.value);
-        if(e.key==='ArrowDown'&&token){
-          e.preventDefault();
-          if(active?.input===input&&list.firstElementChild)list.firstElementChild.focus();
-          else suggest(input,{first:true});
-        }else if(e.key==='Enter'&&token?.isReading){
-          e.preventDefault();
-          if(active?.input===input&&list.firstElementChild)list.firstElementChild.focus();
-          else suggest(input,{first:true});
-        }else if(e.key==='Escape'&&active){
-          e.preventDefault();close();
-        }
-      });
+    function refresh(){
+      picker.hidden=!checked.checked;
+      body.hidden=!parts.letters.length;
+      $('[data-empty]',picker).hidden=Boolean(parts.letters.length);
+      if(!picker.hidden&&!body.hidden)drawSlots();
+      search();
     }
 
+    function updateName(){
+      const next=parseName(name.value);
+      if(next.letters.join('')===parts.letters.join('')&&next.familySize===parts.familySize)return;
+      picks=next.letters.map((letter,i)=>names.isHanja(letter)?letter:letter===parts.letters[i]?picks[i]||'':'');
+      parts=next;
+      if(parts.letters.some(names.isHanja))checked.checked=true;
+      active=Math.max(0,nextBlank());
+      query.value='';
+      refresh();
+    }
+
+    name.addEventListener('input',e=>{if(!e.isComposing)updateName();});
+    name.addEventListener('compositionend',updateName);
+    checked.addEventListener('change',refresh);
+    query.addEventListener('compositionstart',()=>{revision++;hits=[];drawResults();});
+    query.addEventListener('compositionend',()=>search());
+    query.addEventListener('input',e=>{if(!e.isComposing)search();});
+    query.addEventListener('keydown',e=>{
+      if(e.isComposing||e.keyCode===229||!['Enter','ArrowDown'].includes(e.key))return;
+      e.preventDefault();
+      if(list.firstElementChild)list.firstElementChild.focus();
+      else search({focus:true});
+    });
+    slots.addEventListener('click',e=>{
+      const button=e.target.closest('[data-slot]');
+      if(!button)return;
+      active=Number(button.dataset.slot);
+      query.value='';
+      drawSlots();
+      slots.children[active].focus({preventScroll:true});
+      search();
+    });
     list.addEventListener('click',e=>{
       const button=e.target.closest('[data-candidate]');
-      if(!button||!active)return;
-      const {input,token,value}=active;
-      if(input.value!==value)return;
-      input.setRangeText(hits[Number(button.dataset.candidate)].glyph,token.start,token.end,'end');
-      input.focus({preventScroll:true});
-      suggest(input,{afterChoice:true});
-    });
-    panel.addEventListener('keydown',e=>{
-      if(e.key==='Escape'&&active){
-        e.preventDefault();
-        active.input.focus({preventScroll:true});
-        close();
+      const choice=button&&hits[Number(button.dataset.candidate)];
+      if(!choice)return;
+      picks[active]=choice.glyph;
+      const next=nextBlank();
+      if(next!==-1)active=next;
+      query.value='';
+      drawSlots();
+      slots.children[active].focus({preventScroll:true});
+      if(next!==-1)search();
+      else{
+        revision++;hits=[];drawResults();
+        status.textContent='한자 이름 '+picks.join('')+'을 선택했어요.';
       }
     });
     more.addEventListener('click',()=>{
       const previous=limit;
-      limit+=pageSize;
-      draw(previous);
+      limit+=pageSize;drawResults(previous);
       list.children[previous]?.focus();
     });
-    host.addEventListener('focusout',e=>{
-      if(!host.contains(e.relatedTarget)&&e.relatedTarget)close();
-    });
-    for(const option of host.querySelectorAll('[data-name-mode]')){
-      option.addEventListener('change',()=>{
-        if(mode)drafts[mode]={family:family.value,given:given.value,meaning:meaning.value};
-        mode=option.value;
-        sync();
-      });
-    }
-    $('[data-name-clear]',host).addEventListener('click',()=>{
-      radio(mode).checked=false;
-      drafts[mode]={family:'',given:'',meaning:''};
-      mode='';
-      sync();
-      radio('hanja').focus();
-    });
-    sync();
+    refresh();
     return {read(){
-      if(!mode)return null;
+      updateName();
       try{
-        return names.validate(mode,family.value,given.value,meaning.value);
+        const meaning=parts.letters.join('')===savedDisplay?initial?.meaning||'':'';
+        return names.fromEditor(parts,picks,checked.checked,meaning);
       }catch(error){
-        const unresolved=mode==='hanja'&&[family,given].find(input=>names.searchToken(input.value)?.isReading);
-        const input=unresolved||given;
-        host.closest('details')?.setAttribute('open','');
-        input.focus();
-        if(unresolved)suggest(input);
+        name.focus();
         throw error;
       }
     }};
   }
-
   root.SajuNamePicker={mount};
 })(window);

@@ -9,11 +9,11 @@
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="assets/app-icon-192.png">
-  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="stylesheet" href="style.css?v=3">
   <link rel="stylesheet" href="forms.css?v=2">
-  <link rel="stylesheet" href="reading.css?v=2">
+  <link rel="stylesheet" href="reading.css?v=3">
   <script defer src="ui.js?v=2"></script>
-  <script defer src="scenes.js?v=2"></script>
+  <script defer src="scenes.js?v=3"></script>
   <script defer src="engine.js?v=2"></script>
   <script defer src="reading.js?v=2"></script>
   <script defer src="questions-data.js?v=2"></script>
@@ -23,7 +23,7 @@
   <script defer src="timing-view.js?v=2"></script>
   <script defer src="name.js?v=2"></script>
   <script defer src="region-picker.js?v=2"></script>
-  <script defer src="app.js?v=2"></script>
+  <script defer src="app.js?v=3"></script>
 </head>
 <body>
   <a class="skip" href="#main">본문으로 건너뛰기</a>
@@ -42,7 +42,13 @@
         <span class="eyebrow"><i></i> 처음 읽는 사람을 위한 사주</span>
         <h1>내 이야기를<br> <em>일상에서</em> 읽어요.</h1>
         <p>일을 할 때, 사람을 만날 때, 결정이 어려울 때.<br class="wide-break"> 태어난 날의 사주를 익숙한 장면으로 풀어드려요.</p>
-        <figure><img src="assets/hero.svg" alt="해 질 무렵 정원 벤치에서 책을 펼친 사람" width="610" height="408" fetchpriority="high"><figcaption><span>✦</span> 나를 알아가는 시간</figcaption></figure>
+        <figure>
+          <img src="assets/watercolor/hero.webp"
+               srcset="assets/watercolor/hero-small.webp 720w, assets/watercolor/hero.webp 1200w"
+               sizes="(max-width: 680px) calc(100vw - 28px), (max-width: 870px) 56vw, (max-width: 1184px) 53vw, 616px"
+               alt="큰 나무 그늘에서 책을 읽는 사람과 들꽃 사이를 흐르는 개울의 수채화" width="1200" height="800" fetchpriority="high">
+          <figcaption><span>✦</span> 나를 알아가는 시간</figcaption>
+        </figure>
       </div>
       <form class="form-card" id="birth-form" novalidate>
         <span class="eyebrow">내 정보 입력</span><h2>내 사주 보기</h2>

@@ -188,21 +188,27 @@
       '<li><a href="https://www.unicode.org/reports/tr38/" target="_blank" rel="noopener">Unicode Unihan</a> · <a href="data/unicode-LICENSE.txt">이용 조건</a></li>'+
       '<li><a href="https://github.com/swuhalee/korea-regions-with-coords" target="_blank" rel="noopener">국내 출생 지역 좌표 자료</a></li></ul>');
   }
-  function reportFile(){
-    if(!model)return;
-    const r=model.result, s=model.story, day=R.stem(r);
+  async function reportFile(){
+    const button=field('export-report');
+    if(!model||button.disabled)return;
+    const {result:r,story:s,scene,uncertain}=model, day=R.stem(r);
+    const profile=field('profile-meta').textContent;
     const labels=['좋게 발휘될 때','부담이 커질 때','오늘 해볼 일'];
     const stages=[s.good,s.strain,s.action];
-    const doc='<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>사주정원 풀이</title>'+
-      '<style>body{font:17px/1.7 system-ui,sans-serif;background:#f8f5ec;color:#203a32;max-width:760px;margin:auto;padding:24px;overflow-wrap:anywhere}section{background:white;border-radius:16px;padding:20px;margin:14px 0}svg{display:block;width:min(100%,320px);height:auto}</style>'+
-      '<h1>내 사주 풀이</h1><p>'+esc(field('profile-meta').textContent)+'</p><h2>'+esc(s.title)+'</h2><p>'+esc(s.intro)+'</p>'+
-      stages.map((x,i)=>'<section>'+root.SajuScene([model.scene,'pressure','next'][i])+'<h3>'+labels[i]+'</h3><p>'+esc(x)+'</p></section>').join('')+
-      '<section><h2>내 사주표</h2><p>'+r.pillars.map(p=>p.title+' '+p.gz).join(' · ')+'</p>'+
-      (model.uncertain?'':'<p>읽는 기준 '+day.han+' · '+day.name+'</p>')+'</section></html>';
-    const link=document.createElement('a');
-    link.href=URL.createObjectURL(new Blob([doc],{type:'text/html;charset=utf-8'}));
-    link.download='사주정원-종합풀이.html';link.click();
-    setTimeout(()=>URL.revokeObjectURL(link.href),1000);
+    button.disabled=true;
+    try{
+      const artwork=await Promise.all([scene,'pressure','next'].map(root.SajuScene.embed));
+      const doc='<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>사주정원 풀이</title>'+
+        '<style>body{font:17px/1.7 system-ui,sans-serif;background:#f8f5ec;color:#203a32;max-width:760px;margin:auto;padding:24px;overflow-wrap:anywhere}section{background:white;border-radius:16px;padding:20px;margin:14px 0}img{display:block;width:min(100%,560px);height:auto;border-radius:12px}</style>'+
+        '<h1>내 사주 풀이</h1><p>'+esc(profile)+'</p><h2>'+esc(s.title)+'</h2><p>'+esc(s.intro)+'</p>'+
+        stages.map((x,i)=>'<section>'+artwork[i]+'<h3>'+labels[i]+'</h3><p>'+esc(x)+'</p></section>').join('')+
+        '<section><h2>내 사주표</h2><p>'+r.pillars.map(p=>p.title+' '+p.gz).join(' · ')+'</p>'+
+        (uncertain?'':'<p>읽는 기준 '+day.han+' · '+day.name+'</p>')+'</section></html>';
+      const link=document.createElement('a');
+      link.href=URL.createObjectURL(new Blob([doc],{type:'text/html;charset=utf-8'}));
+      link.download='사주정원-종합풀이.html';link.click();
+      setTimeout(()=>URL.revokeObjectURL(link.href),1000);
+    }finally{button.disabled=false;}
   }
 
   field('saved-open').addEventListener('click',saved);

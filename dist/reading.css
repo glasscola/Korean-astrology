@@ -49,7 +49,7 @@
 .section-title h2,.section-lead h2{font-size:clamp(1.75rem,3.5vw,2.65rem);margin:5px 0 8px}
 .section-title p,.section-lead p{max-width:57ch}
 .section-lead{display:grid;grid-template-columns:1.5fr minmax(120px,.62fr);align-items:center;gap:22px;padding:18px;background:#edece0;border-radius:17px}
-.section-lead svg{max-width:340px;margin-left:auto}
+.section-lead .scene{max-width:340px;margin-left:auto}
 .question-title{padding:21px;background:#e8eddf;border-radius:18px}
 .question-controls{display:grid;gap:11px;padding:0 0 13px}
 .question-search{position:relative;display:block}
@@ -67,7 +67,7 @@
 .more-questions{width:100%;margin-top:8px}
 .question-answer{overflow:hidden;scroll-margin-top:12px}
 .answer-image{background:#edeae0}
-.answer-image .scene{width:min(100%,385px);margin:auto}
+.answer-image .scene{width:100%;border-radius:0;aspect-ratio:2.35;object-fit:cover;object-position:center 54%}
 .answer-body{padding:18px 21px}
 .answer-body h3,.time-reading h3{font-size:1.65rem;margin:5px 0 10px}
 .answer-body>p{margin:6px 0;color:var(--soft)}
@@ -144,4 +144,4 @@
  .section-lead h2{font-size:1.43rem}.section-lead p{font-size:.87rem}
  .filter-buttons button{font-size:.83rem;padding-inline:8px}
 }
-@media(max-width:335px){.section-lead{grid-template-columns:1fr}.section-lead svg{max-width:180px;margin-left:0}.question-list{grid-template-columns:1fr}}
+@media(max-width:335px){.section-lead{grid-template-columns:1fr}.section-lead .scene{max-width:180px;margin-left:0}.question-list{grid-template-columns:1fr}}

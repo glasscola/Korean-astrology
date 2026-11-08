@@ -11,6 +11,7 @@ with ZipFile(archive, 'w', compression=ZIP_DEFLATED) as bundle:
         if item.is_file():
             bundle.write(item, (Path('사주정원') / item.relative_to(dist)).as_posix())
     bundle.write(project / 'README.md', '사주정원-읽어보기.md')
+    bundle.write(project / 'ARTWORK.md', 'ARTWORK.md')
 with ZipFile(archive) as bundle:
     assert bundle.testzip() is None
 print(archive.name, archive.stat().st_size)

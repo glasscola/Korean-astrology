@@ -28,7 +28,7 @@
     if(!given)throw Error('이름을 입력해 주세요.');
     if(!safeLength(family,4)||!safeLength(given,12))throw Error('성은 최대 4글자, 이름은 최대 12글자로 입력해 주세요.');
     if(mode==='hanja'&&![...split(family),...split(given)].every(c=>han.test(c))){
-      throw Error('한자 이름은 한자로 붙여넣거나 아래에서 한자 후보를 골라 주세요.');
+      throw Error('입력한 소리의 한자 후보를 골라 주세요. 한글 이름이라면 ‘한글 입력’을 선택해 주세요.');
     }
     if(mode!=='hanja'&&![family,given].filter(Boolean).every(c=>hangul.test(c.normalize('NFC'))))throw Error('한글 이름을 입력해 주세요.');
     return {mode,family,given,meaning:mode==='korean'?meaning:''};
@@ -47,76 +47,45 @@
       reference:(!direct(base)&&fallback)?alternate:null};
   }
 
-  function fields(host,initial){
-    const name=initial||{mode:'hanja',family:'',given:'',meaning:''};
-    host.innerHTML='<div class="name-fields">'+
-      '<label class="stack">어떤 이름인가요?<select data-field="mode"><option value="hanja">한자 이름이에요</option><option value="unknown">한자를 몰라요</option><option value="korean">한자가 없는 이름이에요</option></select></label>'+
-      '<div class="name-pair"><label class="stack">성 <small>선택</small><input data-field="family" autocomplete="off" spellcheck="false" value="'+esc(name.family)+'"></label>'+
-      '<label class="stack">이름<input data-field="given" autocomplete="off" spellcheck="false" value="'+esc(name.given)+'"></label></div>'+
-      '<label class="stack" data-meaning hidden>내가 아는 이름의 뜻 <small>선택</small><input data-field="meaning" maxlength="160" value="'+esc(name.meaning)+'" placeholder="예: 밝고 건강하게 자라길 바라는 뜻"></label>'+
-      '<p class="hint" data-name-hint></p>'+
-      '<details class="form-details lookup" data-lookup><summary>한글로 한자 후보 찾기</summary>'+
-      '<div class="lookup-input"><label class="stack">한 글자의 소리<input data-lookup-input placeholder="예: 민" maxlength="6" autocomplete="off"></label><button type="button" class="button subtle" data-lookup-button>찾기</button></div>'+
-      '<label class="stack">어디에 넣을까요?<select data-lookup-target><option value="given">이름에 넣기</option><option value="family">성에 넣기</option></select></label>'+
-      '<p class="hint" data-lookup-status role="status"></p><div class="name-candidates" data-lookup-results></div>'+
-      '<button type="button" class="text-button" data-lookup-more hidden>후보 더 보기 ↓</button></details></div>';
-    const field=key=>$('[data-field="'+key+'"]',host);
-    const status=$('[data-lookup-status]',host), results=$('[data-lookup-results]',host);
-    const input=$('[data-lookup-input]',host), more=$('[data-lookup-more]',host);
-    let hits=[],limit=12,searchId=0;
-    field('mode').value=name.mode;
-    function updateMode(){
-      const mode=field('mode').value;
-      $('[data-meaning]',host).hidden=mode!=='korean';
-      $('[data-lookup]',host).hidden=mode!=='hanja';
-      field('family').placeholder=mode==='hanja'?'예: 金':'예: 김';
-      field('given').placeholder=mode==='hanja'?'예: 敏秀':'예: 민수';
-      $('[data-name-hint]',host).textContent=mode==='hanja'?'실제 이름에 쓰는 한자를 넣어 주세요.':'한글 이름에서 확인할 수 있는 뜻과 소리를 살펴봐요.';
-    }
-    function draw(){
-      results.innerHTML=hits.slice(0,limit).map(([char,gloss],i)=>'<button type="button" class="name-choice" data-candidate="'+i+'"><b lang="ko">'+esc(char)+'</b><span>'+esc(gloss||input.value.trim())+'</span></button>').join('');
-      more.hidden=limit>=hits.length;
-    }
-    async function search(){
-      const q=input.value.trim().normalize('NFC'), ticket=++searchId;
-      hits=[];draw();
-      if(!/^[가-힣]$/.test(q)){status.textContent='한글 한 글자를 입력해 주세요.';return;}
-      status.textContent='한자 후보를 찾는 중이에요.';
-      try{
-        await Promise.all(Array.from({length:count},(_,i)=>part(i)));
-        if(ticket!==searchId)return;
-        for(const entries of shards.values()){
-          for(const [char,[readings]] of Object.entries(entries)){
-            if(!han.test(char))continue;
-            const reading=readings.find(row=>row[0]===q);
-            if(reading)hits.push([char,reading[1].split(',')[0]]);
+  let searchIndex;
+  const familiar=new Set('金李朴崔鄭姜趙尹張林韓吳徐申權黃安宋柳洪全高文梁孫裵白許南沈盧河郭成車周禹朱任羅田閔兪劉鄔丁秦士修守洙受水洙秀壽敏民旼旻珉玟美恩志智芝知惠慧賢玄昇勝承俊準浚埈叡藝睿仁人印潤允侖正貞英榮永映旻宙宇佑祐友真眞珍鎭辰進振炳秉昊浩皓善宣瑄延妍姸蓮多和禾夏河柔宥有玹鉉允瑞書抒舒燦輝奎圭建健大泰太珪');
+  function byReading() {
+    searchIndex ??= Promise.all(Array.from({length:count},(_,i)=>part(i))).then(()=>{
+      const index=new Map();
+      for(const entries of shards.values()){
+        for(const [glyph,[readings]] of Object.entries(entries)){
+          if(!han.test(glyph))continue;
+          for(const [reading,meaning] of readings){
+            if(!index.has(reading))index.set(reading,[]);
+            index.get(reading).push({glyph,reading,meaning:meaning.split(',')[0]});
           }
         }
-        hits.sort((a,b)=>Number(Boolean(b[1]))-Number(Boolean(a[1]))||a[0].localeCompare(b[0],'ko'));
-        limit=12;
-        status.textContent=hits.length?hits.length.toLocaleString('ko')+'개 후보예요. 실제 이름 글자를 확인하고 골라 주세요.':'자료에서 해당 소리의 한자를 찾지 못했어요.';
-        draw();
-      }catch(error){if(ticket===searchId)status.textContent=error.message;}
-    }
-    field('mode').addEventListener('change',updateMode);
-    $('[data-lookup-button]',host).addEventListener('click',search);
-    input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();search();}});
-    input.addEventListener('input',()=>{searchId++;hits=[];status.textContent='';draw();});
-    more.addEventListener('click',()=>{limit+=12;draw();});
-    results.addEventListener('click',e=>{
-      const button=e.target.closest('[data-candidate]');
-      if(!button)return;
-      const char=hits[+button.dataset.candidate]?.[0];
-      if(!char)return;
-      const target=field($('[data-lookup-target]',host).value);
-      const max=target===field('family')?4:12;
-      if(!safeLength(target.value+char,max)){status.textContent='이 칸에 넣을 수 있는 글자 수를 확인해 주세요.';return;}
-      const start=target.selectionStart??target.value.length, end=target.selectionEnd??start;
-      target.setRangeText(char,start,end,'end');
-      status.textContent=char+' 글자를 '+(max===4?'성':'이름')+'에 넣었어요.';
-    });
-    updateMode();
-    return {read:()=>validate(field('mode').value,field('family').value,field('given').value,field('meaning').value)};
+      }
+      for(const hits of index.values()){
+        hits.sort((a,b)=>Number(familiar.has(b.glyph))-Number(familiar.has(a.glyph))||
+          Number(Boolean(b.meaning))-Number(Boolean(a.meaning))||a.glyph.localeCompare(b.glyph,'ko'));
+      }
+      return index;
+    }).catch(error=>{searchIndex=null;throw error;});
+    return searchIndex;
+  }
+
+  async function search(query){
+    if(/^[가-힣]$/.test(query))return (await byReading()).get(query)||[];
+    if(!han.test(query))return [];
+    const {glyph,readings,strokes}=await lookup(query);
+    if(!readings.length&&strokes==null)return [];
+    return [{glyph,reading:readings.map(([sound])=>sound).join(' · '),
+      meaning:readings.find(([,gloss])=>gloss)?.[1].split(',')[0]||''}];
+  }
+
+  function searchToken(text){
+    const sound=/[가-힣]|[ᄀ-ᄒ][ᅡ-ᅵ][ᆨ-ᇂ]?/.exec(text);
+    if(sound)return {query:sound[0].normalize('NFC'),start:sound.index,end:sound.index+sound[0].length,isReading:true};
+    const trimmed=text.trim();
+    if(!han.test(trimmed))return null;
+    const start=text.indexOf(trimmed);
+    return {query:trimmed,start,end:start+trimmed.length,isReading:false};
   }
 
   const onset=['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
@@ -160,9 +129,9 @@
   }
 
   function mount(host,name,model,onSave) {
-    host.innerHTML='<div class="section-lead"><div><span class="eyebrow">이름의 글자와 뜻</span><h2>내 이름은 어떤 이야기일까요?</h2><p>실제로 쓰는 한자를 넣으면 글자마다 뜻과 획수를 살펴볼 수 있어요.</p></div>'+root.SajuScene('name')+'</div>'+
+    host.innerHTML='<div class="section-lead"><div><span class="eyebrow">이름의 글자와 뜻</span><h2>내 이름은 어떤 이야기일까요?</h2><p>한자를 검색하거나 한글 이름을 입력해 보세요. 이름 풀이는 선택이에요.</p></div>'+root.SajuScene('name')+'</div>'+
       '<div class="name-layout"><form class="card name-editor" novalidate><div data-editor></div><p data-name-error class="error" role="alert" hidden></p><button type="submit" class="button primary">이 이름 풀이 보기 →</button></form><div class="card name-result" aria-live="polite" data-name-result></div></div>';
-    const editor=fields($('[data-editor]',host),name), result=$('[data-name-result]',host), error=$('[data-name-error]',host);
+    const editor=root.SajuNamePicker.mount($('[data-editor]',host),name), result=$('[data-name-result]',host), error=$('[data-name-error]',host);
     let ticket=0;
     async function render(value){
       const n=++ticket;
@@ -186,5 +155,5 @@
     });
     render(name);
   }
-  root.SajuName={install:(i,data)=>shards.set(i,data),validate,lookup,fields,mount};
+  root.SajuName={install:(i,data)=>shards.set(i,data),validate,lookup,search,searchToken,mount};
 })(window);

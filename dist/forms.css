@@ -54,17 +54,21 @@ legend{padding:0;margin-bottom:6px}
 .region-selection{font-size:.82rem;color:var(--green);font-weight:690}
 .stack{display:grid;gap:4px;min-width:0}
 .stack small{display:inline;margin:0}
-.name-fields{display:grid;gap:10px}
-.name-pair{grid-template-columns:1fr 1.65fr;align-items:start}
-.name-pair .stack{display:block}
-.name-pair .stack input{display:block;margin-top:4px}
-.name-pair input{font-size:1.25rem!important;letter-spacing:.06em}
-.lookup-input{display:grid;align-items:end;grid-template-columns:minmax(0,1fr) auto;gap:7px;margin-bottom:8px}
-.lookup select{margin-bottom:7px}
-.name-candidates{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(105px,100%),1fr));gap:6px;margin-top:7px;max-height:236px;overflow:auto}
-.name-choice{display:flex;align-items:center;gap:6px;border:1px solid #d6dace;border-radius:9px;background:#fbf9ef;padding:5px 7px;text-align:left;min-height:45px}
+.name-fields,.name-entry{display:grid;gap:9px;min-width:0}
+.form-details .name-fields{margin-top:8px}
+.name-modes{min-width:0;margin:0}
+.name-pair{grid-template-columns:minmax(0,1fr) minmax(0,1.65fr);align-items:start}
+.name-entry[data-mode=hanja] .name-pair{grid-template-columns:minmax(0,1fr);gap:9px}
+.name-slot{display:grid;gap:4px;min-width:0}
+.name-search{padding:8px;border:1px solid var(--line);border-radius:10px;background:#f4f5ec}
+.name-candidates{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(116px,100%),1fr));gap:6px;max-height:215px;overflow:auto;overscroll-behavior:contain}
+.name-candidates:not(:empty){margin-top:6px;padding:3px}
+.name-choice{display:flex;align-items:center;min-width:0;gap:6px;border:1px solid #d6dace;border-radius:9px;background:#fffefa;padding:5px 7px;text-align:left;min-height:46px}
 .name-choice b{font-family:var(--serif);font-size:1.4rem;flex:none}
-.name-choice span{font-size:.78rem;line-height:1.35;overflow-wrap:anywhere}
-.name-choice:hover{background:var(--mint)}
+.name-choice span{font-size:.8rem;line-height:1.35;overflow-wrap:anywhere}
+.name-choice small{display:block;color:var(--soft);font-size:.75rem}
+.name-choice:hover,.name-choice:focus-visible{background:var(--mint)}
+.name-search .text-button,.name-clear{min-height:38px}
+.name-clear{justify-self:start}
 @media(max-width:870px){.form-card{padding:20px 16px}}
 @media(max-width:380px){.form-card{padding:17px 12px}.date-inputs{gap:4px}.date-inputs input:not([type]){padding-left:6px;padding-right:21px}.date-inputs label span{right:5px}.choice-inline span{padding-inline:7px}}

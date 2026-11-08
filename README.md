@@ -16,7 +16,7 @@
 | 계산과 종합 해석 | `engine.js`, `reading.js` |
 | 결과 화면 | `report-view.js`, `detail-view.js`, `timing-view.js`, `scenes.js` |
 | 생활 질문 | `questions-data.js`, `questions-view.js` |
-| 이름 | `name.js`, `data/hanja-*.js` 8개와 각각의 출처 고지 |
+| 이름 | `name.js`, `name-picker.js`, `data/hanja-*.js` 8개와 각각의 출처 고지 |
 | 스타일 | `style.css`, `forms.css`, `reading.css` |
 
 출생 지역 검색 자료와 달력 라이브러리는 해당 기능이 필요할 때 불러옵니다. 한자 직접 입력은 필요한 코드 포인트에 해당하는 데이터 파일부터 사용합니다. 한글로 후보를 찾을 때는 여덟 데이터 파일을 검색합니다. 대화형 결과의 데이터 요청은 사이트 내부 정적 파일에 한정합니다.

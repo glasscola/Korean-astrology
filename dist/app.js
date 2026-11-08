@@ -4,7 +4,7 @@
   const form=$('#birth-form'), panels=$$('.report-panel'), formError=$('#form-error');
   const field=id=>$('#'+id), storageKey='saju-garden-profiles';
   const nameBox=field('birth-name');
-  let nameForm=root.SajuName.fields(nameBox);
+  let nameForm=root.SajuNamePicker.mount(nameBox);
   let regionPicker,regionLoading,model,active='overview',busy=false,profileId=null;
   const visited=new Set();
   field('preview-links').innerHTML=root.SajuReport.questionLinks();
@@ -67,9 +67,7 @@
     const min=unknown?0:numeric('birth-minute',0,59,/^[0-9]{1,2}$/);
     const city=regionPicker?.getValue();
     if(!city){field('city-search').focus();throw Error('검색 결과에서 태어난 지역을 하나 골라 주세요.');}
-    let nameDetails;
-    try{nameDetails=nameForm.read();}
-    catch(e){nameBox.closest('details').open=true;$('[data-field="given"]',nameBox).focus();throw e;}
+    const nameDetails=nameForm.read();
     return {date:year+'-'+U.pad(month)+'-'+U.pad(day),time:U.pad(h)+':'+U.pad(min),unknown,city,
       calendar:$('input[name="calendar"]:checked').value,leap:field('leap').checked,
       gender:$('input[name="gender"]:checked')?.value||null,correction:field('correction').checked,
@@ -88,7 +86,7 @@
     field('clock-fold').value=p.clockFold||'';
     field('approx').value=p.approx||'';
     regionPicker.setValue(p.city);
-    nameForm=root.SajuName.fields(nameBox,p.nameDetails);
+    nameForm=root.SajuNamePicker.mount(nameBox,p.nameDetails);
     nameBox.closest('details').open=Boolean(p.nameDetails);
     syncForm();
   }
@@ -108,7 +106,7 @@
       if(name==='questions')root.SajuQuestionView.mount(host,model,question);
       if(name==='name')root.SajuName.mount(host,model.result.input.nameDetails,model,next=>{
         model.result.input.nameDetails=next;
-        nameForm=root.SajuName.fields(nameBox,next);
+        nameForm=root.SajuNamePicker.mount(nameBox,next);
         nameBox.closest('details').open=Boolean(next);
         showHeader();
       });
